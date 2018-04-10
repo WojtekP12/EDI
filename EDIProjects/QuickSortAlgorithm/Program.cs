@@ -17,60 +17,35 @@ namespace QuickSortAlgorithm
         static readonly List<string> ImageExtensions = new List<string> { ".JPG", ".JPE", ".BMP", ".GIF", ".PNG", ".XBM" };
         static readonly string FilePath = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName + "/Resources/access_log_Aug95";
         static string csvFilePath = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName + "\\Resources\\";
-        static string[,] sortedValidDataTable = new string[NUMBER_OF_DATA, 8];
-        static string[,] validDataSortedBySession = new string[NUMBER_OF_DATA, 8];
-        static string[,] validDataTable = new string[NUMBER_OF_DATA, 8];
-        static string[,] sessions = new string[49, 2];
+
+        static string[,] sortedValidDataTable = new string[NUMBER_OF_DATA, 7];
+        static string[,] validDataTable = new string[NUMBER_OF_DATA, 7];
         static string[,] popularSites;
         static List<string> mostPopularSites = new List<string>();
 
         static List<string> validData = new List<string>();
-        static List<string> dataWithGetMethod = new List<string>();
-        static List<string> dataWithOkStatus = new List<string>();
-        static List<string> dataWithoutImages = new List<string>();
         static List<string> dataWithAllConditions = new List<string>();
         static List<int> dataWithAllConditionsIndexes = new List<int>();
         static string[,] tableWithAllConditions;
-        static string[,] sortedTableWithALlConditions;
         static List<string> sites = new List<string>();
         static List<string> users = new List<string>();
 
         static void Main(string[] args)
         {
+            Console.WriteLine("Filling data...");
             FillData();
+            Console.WriteLine("DONE");
+
+            Console.WriteLine("Chosing popular sites...");
             ChoseMostPopularSites();
+            Console.WriteLine("DONE");
 
-            Console.WriteLine("Number of valid data: " + validData.Count);
-            Console.WriteLine("Number of data with GET method: " + dataWithGetMethod.Count);
-            Console.WriteLine("Number of data with OK (200) status: " + dataWithOkStatus.Count);
-            Console.WriteLine("Number of data without images: " + dataWithoutImages.Count);
-            Console.WriteLine("Number of data with all above conditions: " + dataWithAllConditions.Count);
-
-            for (int i = 0; i < 48; i++)
-            {
-                Console.WriteLine($"nr: {sessions[i,0]}  time: {sessions[i,1]}");
-            }
-
-            Console.WriteLine("Saving File...");
-
-            //SaveToCSVFile(dataWithAllConditions, "dataWithAllConditions");
-            SaveToCSVSessionFile();
-
-            SetSessions();
+            Console.WriteLine("Preparing files...");
+            PrepareFiles();
+            Console.WriteLine("DONE");
 
             Console.WriteLine("Click to EXIT");
             Console.ReadLine();
-        }
-
-        private static void SetSessions()
-        {
-            for(int i=0;i<48;i++)
-            {
-                for(int j=0;i<NUMBER_OF_DATA;j++)
-                {
-
-                }
-            }
         }
 
         private static void ChoseMostPopularSites()
@@ -83,67 +58,12 @@ namespace QuickSortAlgorithm
                 }
             }
         }
-
-        private static void FillSessions()
-        {
-            DateTime sessionTime = new DateTime(1995, 8, 1, 0, 0, 0);
-            for (int i = 0; i < 48; i++)
-            {
-                sessions[i, 0] = (i+1).ToString();
-                sessions[i, 1] = sessionTime.ToString("HH:mm:ss");
-
-                sessionTime = sessionTime.AddMinutes(30);
-            }
-
-            sessions[48, 0] = "49";
-            sessions[48, 1] = "00:00:00";
-        }
-
-        private static void SaveToCSVFile(List<string> validData, string fileName)
-        {
-            fileName = csvFilePath + fileName;
-            string txtfileName = fileName + ".txt";
-            string csvFileName = fileName + ".csv";
-            string wekaFileName = fileName + ".arff";
-
-            if(File.Exists(txtfileName))
-            {
-                File.Delete(txtfileName);
-            }
-            
-            using (StreamWriter csvFile = new StreamWriter(txtfileName, true))
-            {
-                csvFile.WriteLine("@RELATION NASA");
-                csvFile.WriteLine(String.Empty);
-                csvFile.WriteLine("@ATTRIBUTE host STRING");
-                csvFile.WriteLine("@ATTRIBUTE date DATE \"dd/MM/yyyy\" ");
-                csvFile.WriteLine("@ATTRIBUTE time DATE \"HH:mm:ss\"");
-                csvFile.WriteLine("@ATTRIBUTE method STRING");
-                csvFile.WriteLine("@ATTRIBUTE protocol STRING");
-                csvFile.WriteLine("@ATTRIBUTE status INTEGER");
-                csvFile.WriteLine("@ATTRIBUTE file STRING");
-                csvFile.WriteLine("@ATTRIBUTE session STRING");
-                csvFile.WriteLine(String.Empty);
-                csvFile.WriteLine("@DATA");
-
-                foreach (var line in validData)
-                {
-                    csvFile.WriteLine(line.Replace(" ", ","));
-                }
-            }
-
-            if (File.Exists(wekaFileName))
-            {
-                File.Delete(wekaFileName);
-            }
-
-            File.Move(txtfileName, wekaFileName);
-        }
-
-        private static void SaveToCSVSessionFile()
+ 
+        private static void PrepareFiles()
         {
             var list = new List<string>();
             var validSessionLines = new List<string>();
+            var validUserLines = new List<string>();
 
             foreach (var user in users)
             {
@@ -163,7 +83,7 @@ namespace QuickSortAlgorithm
                     }
                 }
 
-                if(operations!=0)
+                if (operations != 0)
                 {
                     var startSessionTime = usrs.First().Time;
                     var endSessionTime = usrs.Last().Time;
@@ -177,14 +97,14 @@ namespace QuickSortAlgorithm
                     {
                         times.Add(times[s - 1].AddMinutes(30));
                     }
-                    
-                    foreach(var u in usrs)
+
+                    foreach (var u in usrs)
                     {
-                        foreach(var t in times)
+                        foreach (var t in times)
                         {
-                            if(u.Time >= t && u.Time<=t.AddMinutes(30))
+                            if (u.Time >= t && u.Time <= t.AddMinutes(30))
                             {
-                                u.Session = times.IndexOf(t)+1;
+                                u.Session = times.IndexOf(t) + 1;
                             }
                         }
                     }
@@ -193,7 +113,7 @@ namespace QuickSortAlgorithm
 
                     for (int s = 0; s < countOfSessions; s++)
                     {
-                        if(usrs.Where(q => q.Session == s + 1).Any())
+                        if (usrs.Where(q => q.Session == s + 1).Any())
                         {
                             var diff = (usrs.Where(q => q.Session == s + 1).Last().Time - usrs.Where(q => q.Session == s + 1).First().Time).TotalSeconds;
 
@@ -206,14 +126,18 @@ namespace QuickSortAlgorithm
                                 vs.Number = s + 1;
                                 validSessions.Add(vs);
                             }
+                            else
+                            {
+                                usrs.Remove(usrs.Where(q => q.Session == s + 1).First());
+                            }
                         }
                     }
 
-                    foreach(var s in validSessions)
+                    foreach (var s in validSessions)
                     {
-                        string line = $"{s.User},{s.Number},{Math.Round(s.SessionTime,2)},{s.NumberOfOperations},{Math.Round(s.AverageTime,2)}";
+                        string line = $"{s.User},{s.Number},{Math.Round(s.SessionTime, 2)},{s.NumberOfOperations},{Math.Round(s.AverageTime, 2)}";
 
-                        foreach(var site in mostPopularSites)
+                        foreach (var site in mostPopularSites)
                         {
                             int counter = 0;
                             foreach (var u in usrs.Where(q => q.Session == s.Number))
@@ -224,7 +148,7 @@ namespace QuickSortAlgorithm
                                 }
                             }
 
-                            if(counter>0)
+                            if (counter > 0)
                             {
                                 line += ",T";
                             }
@@ -233,23 +157,51 @@ namespace QuickSortAlgorithm
                                 line += ",F";
                             }
                         }
-                        
+
 
                         validSessionLines.Add(line);
+                    }
+
+                    
+                    if (validSessions.Any())
+                    {
+                        string userLine = $"{validSessions.First().User},{validSessions.Count}";
+
+                        foreach (var site in mostPopularSites)
+                        {
+                            int counter = 0;
+                            foreach (var u in usrs)
+                            {
+                                if (u.Site == site)
+                                {
+                                    counter++;
+                                }
+                            }
+
+                            if (counter > 0)
+                            {
+                                userLine += ",T";
+                            }
+                            else
+                            {
+                                userLine += ",F";
+                            }
+                        }
+
+                        validUserLines.Add(userLine);
                     }
                 }
             }
 
-            string txtfileName = csvFilePath + "sessions.txt";
-            string csvFileName = csvFilePath + "sessions.csv";
-            string wekaFileName = csvFilePath + "sessions.arff";
+            string txtSessionFileName = csvFilePath + "sessions.txt";
+            string wekaSessionFileName = csvFilePath + "sessions.arff";
 
-            if (File.Exists(txtfileName))
+            if (File.Exists(txtSessionFileName))
             {
-                File.Delete(txtfileName);
+                File.Delete(txtSessionFileName);
             }
 
-            using (StreamWriter csvFile = new StreamWriter(txtfileName, true))
+            using (StreamWriter csvFile = new StreamWriter(txtSessionFileName, true))
             {
                 csvFile.WriteLine("@RELATION NASA-SESSIONS");
                 csvFile.WriteLine(String.Empty);
@@ -260,7 +212,7 @@ namespace QuickSortAlgorithm
                 csvFile.WriteLine("@ATTRIBUTE average-time INTEGER");
                 foreach (var site in mostPopularSites)
                 {
-                    csvFile.WriteLine("@ATTRIBUTE " + site + " STRING");
+                    csvFile.WriteLine("@ATTRIBUTE " + site + " {T,F}");
                 }
                 csvFile.WriteLine(String.Empty);
                 csvFile.WriteLine("@DATA");
@@ -271,12 +223,47 @@ namespace QuickSortAlgorithm
                 }
             }
 
-            if (File.Exists(wekaFileName))
+            if (File.Exists(wekaSessionFileName))
             {
-                File.Delete(wekaFileName);
+                File.Delete(wekaSessionFileName);
             }
 
-            File.Move(txtfileName, wekaFileName);
+            File.Move(txtSessionFileName, wekaSessionFileName);
+
+
+            string txtUserFileName = csvFilePath + "users.txt";
+            string wekaUserFileName = csvFilePath + "users.arff";
+
+            if (File.Exists(txtUserFileName))
+            {
+                File.Delete(txtUserFileName);
+            }
+
+            using (StreamWriter csvFile = new StreamWriter(txtUserFileName, true))
+            {
+                csvFile.WriteLine("@RELATION NASA-USERS");
+                csvFile.WriteLine(String.Empty);
+                csvFile.WriteLine("@ATTRIBUTE user STRING");
+                csvFile.WriteLine("@ATTRIBUTE sessions INTEGER");
+                foreach (var site in mostPopularSites)
+                {
+                    csvFile.WriteLine("@ATTRIBUTE " + site + " {T,F}");
+                }
+                csvFile.WriteLine(String.Empty);
+                csvFile.WriteLine("@DATA");
+
+                foreach (var line in validUserLines)
+                {
+                    csvFile.WriteLine(line);
+                }
+            }
+
+            if (File.Exists(wekaUserFileName))
+            {
+                File.Delete(wekaUserFileName);
+            }
+
+            File.Move(txtUserFileName, wekaUserFileName);
 
         }
 
@@ -284,8 +271,6 @@ namespace QuickSortAlgorithm
         {
             string line;
             int row = 0;
-
-            FillSessions();
 
             StreamReader file = new StreamReader(FilePath);
             while ((line = file.ReadLine()) != null)
@@ -297,15 +282,13 @@ namespace QuickSortAlgorithm
 
             for(int i = 0; i<NUMBER_OF_DATA;i++)
             {
-                for(int j=0;j<8;j++)
+                for(int j=0;j<7;j++)
                 {
                     validDataTable[i, j] = sortedValidDataTable[i, j];
-                    validDataSortedBySession[i,j] = sortedValidDataTable[i, j];
                 }
             }
 
             Sort(sortedValidDataTable, 0);
-            Sort(validDataSortedBySession, 7);
 
             file.Close();
 
@@ -313,7 +296,7 @@ namespace QuickSortAlgorithm
             {
                 string validLine = "";
 
-                for (int j = 0; j < 8; j++)
+                for (int j = 0; j < 7; j++)
                 {
                     if (sortedValidDataTable[i, j] != String.Empty)
                     {
@@ -325,21 +308,10 @@ namespace QuickSortAlgorithm
 
                 validData.Add(validLine);
 
-                if (sortedValidDataTable[i, 3].Contains("GET"))
-                {
-                    dataWithGetMethod.Add(validLine);
-                }
-
-                if (sortedValidDataTable[i, 5] == "200")
-                {
-                    dataWithOkStatus.Add(validLine);
-                }
-
                 string fileExtension = Path.GetExtension(sortedValidDataTable[i, 6]);
 
                 if (!ImageExtensions.Contains(fileExtension.ToUpper()) && sortedValidDataTable[i, 6] != "/")
                 {
-                    dataWithoutImages.Add(validLine);
                     sites.Add(sortedValidDataTable[i, 6]);
                 }
 
@@ -353,14 +325,14 @@ namespace QuickSortAlgorithm
 
             users = users.Distinct().ToList();
 
-            tableWithAllConditions = new string[dataWithAllConditions.Count, 8];
+            tableWithAllConditions = new string[dataWithAllConditions.Count, 7];
 
             int r1 = 0;
             for (int i = 0; i < NUMBER_OF_DATA; i++)
             {
                 if(dataWithAllConditionsIndexes.Contains(i))
                 {
-                    for(int j=0;j<8;j++)
+                    for(int j=0;j<7;j++)
                     {
                         tableWithAllConditions[r1, j] = sortedValidDataTable[i, j];
                     }
@@ -404,24 +376,6 @@ namespace QuickSortAlgorithm
             sortedValidDataTable[row, 4] = GetProtocol(line);
             sortedValidDataTable[row, 5] = GetStatusCode(line);
             sortedValidDataTable[row, 6] = GetFile(line);
-            sortedValidDataTable[row, 7] = GetSession(row);
-        }
-
-        private static string GetSession(int row)
-        {
-            for(int i = 0; i < 48; i++)
-            {
-                var x = DateTime.ParseExact(sessions[i, 1], "HH:mm:ss", CultureInfo.InvariantCulture);
-                var y = DateTime.ParseExact(sessions[i+1, 1], "HH:mm:ss", CultureInfo.InvariantCulture);
-                var z = DateTime.ParseExact(sortedValidDataTable[row, 2], "HH:mm:ss", CultureInfo.InvariantCulture);
-
-                if(z.TimeOfDay >= x.TimeOfDay && z.TimeOfDay <= y.TimeOfDay)
-                {
-                    return sessions[i, 0];
-                }
-            }
-
-            return "cannot determine session";
         }
 
         private static string[] GetResponseLine(string line)
