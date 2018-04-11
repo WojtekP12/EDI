@@ -63,7 +63,9 @@ namespace QuickSortAlgorithm
         {
             var list = new List<string>();
             var validSessionLines = new List<string>();
+            var validSessionCatLines = new List<string>();
             var validUserLines = new List<string>();
+            var allValidSessions = new List<Session>();
 
             foreach (var user in users)
             {
@@ -135,6 +137,16 @@ namespace QuickSortAlgorithm
 
                     foreach (var s in validSessions)
                     {
+                        if(s.SessionTime<0)
+                        {
+                            s.SessionTime = 0 - s.SessionTime;
+                        }
+
+                        if(s.AverageTime<0)
+                        {
+                            s.AverageTime = 0 - s.AverageTime;
+                        }
+
                         string line = $"{s.User},{s.Number},{Math.Round(s.SessionTime, 2)},{s.NumberOfOperations},{Math.Round(s.AverageTime, 2)}";
 
                         foreach (var site in mostPopularSites)
@@ -162,7 +174,6 @@ namespace QuickSortAlgorithm
                         validSessionLines.Add(line);
                     }
 
-                    
                     if (validSessions.Any())
                     {
                         string userLine = $"{validSessions.First().User},{validSessions.Count}";
@@ -189,6 +200,86 @@ namespace QuickSortAlgorithm
                         }
 
                         validUserLines.Add(userLine);
+                    }
+
+                    allValidSessions.AddRange(validSessions);
+                }
+            }
+
+            validSessionCatLines.AddRange(validSessionLines);
+
+            var sortedSessionTimes = allValidSessions.Select(q => q.SessionTime).Distinct().ToList();
+            sortedSessionTimes.Sort();
+
+            double elementsInParts = Math.Ceiling((double)sortedSessionTimes.Count / 3);
+            double lastPartCount = sortedSessionTimes.Count - (elementsInParts * 2);
+
+            int firstPartIndex = (int)elementsInParts;
+            int middlePartIndex = (int)elementsInParts * 2;
+
+            double shortValueMin = sortedSessionTimes.GetRange(0, firstPartIndex - 1).First();
+            double shortValueMax = sortedSessionTimes.GetRange(0, firstPartIndex - 1).Last();
+
+            double mediumValueMin = sortedSessionTimes.GetRange(firstPartIndex, middlePartIndex - firstPartIndex).First();
+            double mediumValueMax = sortedSessionTimes.GetRange(firstPartIndex, middlePartIndex - firstPartIndex).Last();
+
+            double largeValueMin = sortedSessionTimes.GetRange(middlePartIndex, sortedSessionTimes.Count - middlePartIndex).First();
+            double largeValueMax = sortedSessionTimes.GetRange(middlePartIndex, sortedSessionTimes.Count - middlePartIndex).Last();
+
+            var sortedAverageTimes = allValidSessions.Select(q => q.AverageTime).Distinct().ToList();
+            sortedAverageTimes.Sort();
+
+            double elementsInPartsAvg = Math.Ceiling((double)sortedSessionTimes.Count / 3);
+            double lastPartCountAvg = sortedAverageTimes.Count - (elementsInParts * 2);
+
+            int firstPartIndexAvg = (int)elementsInParts;
+            int middlePartIndexAvg = (int)elementsInParts * 2;
+
+            double shortValueMinAvg = sortedAverageTimes.GetRange(0, firstPartIndexAvg - 1).First();
+            double shortValueMaxAvg = sortedAverageTimes.GetRange(0, firstPartIndexAvg - 1).Last();
+
+            double mediumValueMinAvg = sortedAverageTimes.GetRange(firstPartIndexAvg, middlePartIndexAvg - firstPartIndexAvg).First();
+            double mediumValueMaxAvg = sortedAverageTimes.GetRange(firstPartIndexAvg, middlePartIndexAvg - firstPartIndexAvg).Last();
+
+            double largeValueMinAvg = sortedAverageTimes.GetRange(middlePartIndexAvg, sortedAverageTimes.Count - middlePartIndexAvg).First();
+            double largeValueMaxAvg = sortedAverageTimes.GetRange(middlePartIndexAvg, sortedAverageTimes.Count - middlePartIndexAvg).Last();
+
+
+            foreach (var s in allValidSessions)
+            {
+                string line = $"{s.User},{s.Number},{Math.Round(s.SessionTime, 2)},{s.NumberOfOperations},{Math.Round(s.AverageTime, 2)}";
+
+                if (s.SessionTime >= shortValueMin && s.SessionTime < mediumValueMin)
+                {
+                    s.SessionTimeCathegory = "short";
+                }
+                else if (s.SessionTime >= mediumValueMin && s.SessionTime < largeValueMin)
+                {
+                    s.SessionTimeCathegory = "average";
+                }
+                else if (s.SessionTime >= largeValueMin && s.SessionTime <= largeValueMax)
+                {
+                    s.SessionTimeCathegory = "long";
+                }
+
+                if (s.AverageTime >= shortValueMinAvg && s.AverageTime < mediumValueMinAvg)
+                {
+                    s.AverageTimeCathegory = "small";
+                }
+                else if (s.AverageTime >= mediumValueMinAvg && s.AverageTime < largeValueMinAvg)
+                {
+                    s.AverageTimeCathegory = "medium";
+                }
+                else if (s.AverageTime >= largeValueMinAvg && s.AverageTime <= largeValueMaxAvg)
+                {
+                    s.AverageTimeCathegory = "large";
+                }
+
+                for(int l=0;l<validSessionCatLines.Count;l++)
+                {
+                    if(validSessionCatLines[l].Contains(line))
+                    {
+                        validSessionCatLines[l] = validSessionCatLines[l].Replace(line, $"{s.User},{s.Number},{s.SessionTimeCathegory},{s.NumberOfOperations},{s.AverageTimeCathegory}");
                     }
                 }
             }
@@ -264,6 +355,44 @@ namespace QuickSortAlgorithm
             }
 
             File.Move(txtUserFileName, wekaUserFileName);
+
+
+            string txtSessionCatFileName = csvFilePath + "sessions_cat.txt";
+            string wekaSessionCatFileName = csvFilePath + "sessions_cat.arff";
+
+            if (File.Exists(txtSessionCatFileName))
+            {
+                File.Delete(txtSessionCatFileName);
+            }
+
+            using (StreamWriter csvFile = new StreamWriter(txtSessionCatFileName, true))
+            {
+                csvFile.WriteLine("@RELATION NASA-USERS-CATEGORY");
+                csvFile.WriteLine(String.Empty);
+                csvFile.WriteLine("@ATTRIBUTE host STRING");
+                csvFile.WriteLine("@ATTRIBUTE session-number INTEGER");
+                csvFile.WriteLine("@ATTRIBUTE session-time {short,average,long}");
+                csvFile.WriteLine("@ATTRIBUTE operations INTEGER");
+                csvFile.WriteLine("@ATTRIBUTE average-time {small,medium,large}");
+                foreach (var site in mostPopularSites)
+                {
+                    csvFile.WriteLine("@ATTRIBUTE " + site + " {T,F}");
+                }
+                csvFile.WriteLine(String.Empty);
+                csvFile.WriteLine("@DATA");
+
+                foreach (var line in validSessionCatLines)
+                {
+                    csvFile.WriteLine(line);
+                }
+            }
+
+            if (File.Exists(wekaSessionCatFileName))
+            {
+                File.Delete(wekaSessionCatFileName);
+            }
+
+            File.Move(txtSessionCatFileName, wekaSessionCatFileName);
 
         }
 

@@ -12,9 +12,13 @@ namespace QuickSortAlgorithm
 
         public double SessionTime { get; set; }
 
+        public string SessionTimeCathegory { get; set; }
+
         public int NumberOfOperations { get; set; }
 
         public double AverageTime { get; set; }
+
+        public string AverageTimeCathegory { get; set; }
 
         public int Number { get; set; }
     }
