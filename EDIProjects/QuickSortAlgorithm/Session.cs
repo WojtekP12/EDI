@@ -16,6 +16,8 @@ namespace QuickSortAlgorithm
 
         public int NumberOfOperations { get; set; }
 
+        public string NumberOfOperationsCategory { get; set; }
+
         public double AverageTime { get; set; }
 
         public string AverageTimeCathegory { get; set; }

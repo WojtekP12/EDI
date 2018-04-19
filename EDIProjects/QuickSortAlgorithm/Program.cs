@@ -275,11 +275,25 @@ namespace QuickSortAlgorithm
                     s.AverageTimeCathegory = "large";
                 }
 
+                if(s.NumberOfOperations >= 1 && s.NumberOfOperations <= 16)
+                {
+                    s.NumberOfOperationsCategory = "small";
+                }
+                else if(s.NumberOfOperations >= 17 && s.NumberOfOperations <= 32)
+                {
+                    s.NumberOfOperationsCategory = "medium";
+                }
+                else if(s.NumberOfOperations >= 33 && s.NumberOfOperations <= 98)
+                {
+                    s.NumberOfOperationsCategory = "large";
+                }
+
                 for(int l=0;l<validSessionCatLines.Count;l++)
                 {
                     if(validSessionCatLines[l].Contains(line))
                     {
                         validSessionCatLines[l] = validSessionCatLines[l].Replace(line, $"{s.User},{s.Number},{s.SessionTimeCathegory},{s.NumberOfOperations},{s.AverageTimeCathegory}");
+                        //validSessionCatLines[l] = validSessionCatLines[l].Replace(line, $"{s.NumberOfOperationsCategory},{s.SessionTimeCathegory},{s.AverageTimeCathegory}");
                     }
                 }
             }
@@ -371,8 +385,8 @@ namespace QuickSortAlgorithm
                 csvFile.WriteLine(String.Empty);
                 csvFile.WriteLine("@ATTRIBUTE host STRING");
                 csvFile.WriteLine("@ATTRIBUTE session-number INTEGER");
+                csvFile.WriteLine("@ATTRIBUTE operations {small,medium,large}");
                 csvFile.WriteLine("@ATTRIBUTE session-time {short,average,long}");
-                csvFile.WriteLine("@ATTRIBUTE operations INTEGER");
                 csvFile.WriteLine("@ATTRIBUTE average-time {small,medium,large}");
                 foreach (var site in mostPopularSites)
                 {
